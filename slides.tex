@@ -1,0 +1,130 @@
+\documentclass[8pt]{beamer}
+
+\usepackage{default}
+\usepackage{pscyr} % High quality fonts
+\usepackage{color}
+
+\usepackage{textcomp}
+
+\graphicspath{{images/}}
+
+%\newcommand{\boldunderline}[1]{\textbf{\underline{#1}}}
+%\newcommand{\boldit}[1]{\textbf{\textit{#1}}}
+
+\mode<presentation>{\usetheme{Frankfurt}}
+
+\begin{document}
+
+\title{Java binary serialization review}
+
+\author{Sirenko A.}
+
+\begin{frame}
+\titlepage
+\begin{center}
+2014
+\end{center}
+\end{frame}
+
+\section{Introduction}
+% What is the problem, how do we suggest to solve it?
+\renewcommand{\partname}{Requirements}
+\subsection{\partname}
+\begin{frame}{\partname}
+  We use serialization in 2 cases:
+  \begin{enumerate}
+    \item to store;
+    \item to transfer;
+  \end{enumerate}
+
+  Main features to consider:
+  \begin{enumerate}
+    \item serialize/deserialize speed;
+    \item serialized size;
+    \item stability to change;
+    \item laboriousness;
+    \item platform-dependence;
+  \end{enumerate}
+
+\end{frame}
+
+\renewcommand{\partname}{JDK tools}
+\subsection{\partname}
+  \begin{frame}{\partname}
+  \begin{itemize}
+    \item Standard serialization: smallest effort / worst performance;
+    \item Externalizable serialization: full control over serialization, define your binary format, no features;
+  \end{itemize}
+  \begin{table}
+  \begin{tabular}{l | c | c | c | c | c }
+    serialization  & speed & size & stability & laboriousness & platform \\
+                   &       &      & to change &               & dependence\\
+    \hline \hline
+    standard       & poor & big   & average & low  & only java  \\
+    \hline
+    externalizable & fast & small & poor    & high & independent
+  \end{tabular}
+
+  \caption{Standard serialization vs Externalizable}
+  \end{table}
+
+\end{frame}
+
+\section{Third party libs}
+\renewcommand{\partname}{Why?}
+\subsection{\partname}
+\begin{frame}{\partname}
+
+Motivation:
+\begin{itemize}
+\item conveniently simple and fast approaches;
+\item better adopted for our data: optional params, variable-length numbers, aliases;
+\item platform-independent: same description of our data for different platforms.
+\end{itemize}
+
+Here we consider:
+\begin{itemize}
+\item protobuf - https://code.google.com/p/protobuf/;
+\item avro - http://avro.apache.org/;
+\item kryo - https://github.com/EsotericSoftware/kryo.
+\end{itemize}
+\end{frame}
+
+\renewcommand{\partname}{Protobuf}
+\subsection{\partname}
+\begin{frame}{\partname}
+Protobuf info
+\end{frame}
+
+\renewcommand{\partname}{Avro}
+\subsection{\partname}
+\begin{frame}{\partname}
+Avro info
+\end{frame}
+
+\renewcommand{\partname}{Kryo}
+\subsection{\partname}
+\begin{frame}{\partname}
+Kryo info
+\end{frame}
+
+\renewcommand{\partname}{Comparison}
+\subsection{\partname}
+\begin{frame}{\partname}
+Comparison placeholder
+\end{frame}
+
+\section{Results}
+\renewcommand{\partname}{Kryo vs. Std in queue}
+\subsection{\partname}
+\begin{frame}{\partname}
+results placeholder
+\end{frame}
+
+\renewcommand{\partname}{Kryo vs. Std in queue}
+\subsection{\partname}
+\begin{frame}{\partname}
+results placeholder
+\end{frame}
+
+\end{document}
