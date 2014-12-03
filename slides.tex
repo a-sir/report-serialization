@@ -3,6 +3,7 @@
 \usepackage{default}
 \usepackage{pscyr} % High quality fonts
 \usepackage{color}
+\usepackage{minted}
 
 \usepackage{textcomp}
 
@@ -71,7 +72,7 @@
 \end{frame}
 
 \section{Third party libs}
-\renewcommand{\partname}{Why?}
+\renewcommand{\partname}{Why use something else?}
 \subsection{\partname}
 \begin{frame}{\partname}
 
@@ -79,7 +80,7 @@
   \begin{itemize}
     \item conveniently simple and fast approaches;
     \item better adopted for our data: optional params, variable-length numbers, aliases;
-    \item platform-independent: same description of our data for different platforms.
+    \item independence from language necessary in some cases.
   \end{itemize}
 
   Here we consider:
@@ -92,26 +93,148 @@
 
 \renewcommand{\partname}{Protobuf}
 \subsection{\partname}
-\begin{frame}{\partname}
+\begin{frame}[fragile]{\partname}
   Protobuf info
   \begin{itemize}
-    \item asdsad
-    \item asdasd
-    \item asd
+    \item needs proto-file with description of your data in primitives;
+    \item java, python, c++ officially supported;
+    \item performant and compact;
   \end{itemize}
+
+
+.proto file:
+\begin{minted}[fontsize=\tiny]{java}
+package tutorial;
+
+option java_package = "com.example.tutorial";
+option java_outer_classname = "AddressBookProtos";
+
+message Person {
+  required string name = 1;
+  required int32 id = 2;
+  optional string email = 3;
+
+  enum PhoneType {
+    MOBILE = 0;
+    HOME = 1;
+ }
+
+  message PhoneNumber {
+    required string number = 1;
+    optional PhoneType type = 2 [default = HOME];
+  }
+
+  repeated PhoneNumber phone = 4;
+}
+
+message AddressBook {
+  repeated Person person = 1;
+}
+
+\end{minted}
+
 \end{frame}
 
 \renewcommand{\partname}{Avro}
 \subsection{\partname}
-\begin{frame}{\partname}
+\begin{frame}[fragile]{\partname}
   Avro info
+  \begin{itemize}
+    \item needs schema-file, can use different schemes to read and write;
+    \item java, python, C\\C++, Ruby;
+    \item schema stored with data $\Rightarrow$ compact files; no manual
+    field-IDs;
+    \item code-generational optional for static languages;
+  \end{itemize}
+
+  \begin{minted}[fontsize=\tiny]{json}
+{
+    "type": "record",
+    "name": "Employee",
+    "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "age", "type": "int"},
+        {"name": "emails", "type": {"type": "array", "items": "string"}},
+        {"name": "boss", "type": ["Employee","null"]}
+    ]
+}
+  \end{minted}
+
 \end{frame}
 
 \renewcommand{\partname}{Kryo}
 \subsection{\partname}
-\begin{frame}{\partname}
+\begin{frame}[fragile]{\partname}
   Kryo info
+\begin{itemize}
+  \item Used as standard serialization with custom serializer when you
+  need it;
+  \item Only java;
+  \item For custom serializer there are primitives and features
+  (variable-length numbers, positive optimisations);
+\end{itemize}
+
+Automatic serialization $\Rightarrow$ not much difference from
+standard serialization:
+
+  \begin{minted}[fontsize=\tiny]{java}
+    Kryo kryo = new Kryo();
+
+    Output output = new Output(new FileOutputStream("file.bin"));
+    SomeClass someObject = ...
+    kryo.writeObject(output, someObject);
+    output.close();
+
+    Input input = new Input(new FileInputStream("file.bin"));
+    SomeClass someObject = kryo.readObject(input, SomeClass.class);
+    input.close();
+  \end{minted}
+
 \end{frame}
+
+\renewcommand{\partname}{Kryo custom}
+\subsection{\partname}
+\begin{frame}[fragile]{\partname}
+
+To customize serializer, submit Serializer to Kryo object or
+read/write primitives using methods of Input/Output:
+
+ \begin{minted}[fontsize=\tiny]{java}
+public class StoredUrl2Serializer extends Serializer<StoredUrl2> {
+
+    @Override
+    public void write(Kryo kryo, Output output, StoredUrl2 storedUrl2) {
+        output.writeByte(0); // first version of format, placeholder for future versions and optimizations
+        output.writeString(this.url.toString());
+        output.writeShort(crawlResultCode);
+        ...
+        output.writeVarInt((int) lastFetchTime, false);
+        Kryo.writeObjectOrNull(output, sourceIds, String.class);
+        kryo.writeObjectOrNull(output, outLinks2, OutLink[].class);
+        ...
+        output.writeVarLong(contentLength, false);
+    }
+
+    @Override
+    public StoredUrl2 read(Kryo kryo, Input input, Class<StoredUrl2> aClass) {
+       byte format;
+       if ((format = input.readByte()) != 0) {
+           throw new RuntimeException("Format not supported: " + format);
+       }
+       Url url = new Url(input.readString(), false);
+       crawlResultCode = input.readShort();
+       ...
+       long lastFetchTime = input.readVarInt(false);
+       @Nullable String sourceIds = kryo.readObjectOrNull(input, String.class);
+       @Nullable OutLink[] outLinks = kryo.readObjectOrNull(input, OutLink[].class);
+       long contentLength = input.readVarLong(false);
+       ...
+       return new StoredUrl2(url, ..., contentLength);
+    }
+ \end{minted}
+
+\end{frame}
+
 
 \renewcommand{\partname}{Comparison}
 \subsection{\partname}
@@ -120,12 +243,6 @@
 \end{frame}
 
 \section{Results}
-\renewcommand{\partname}{Kryo vs. Std in queue}
-\subsection{\partname}
-\begin{frame}{\partname}
-  results placeholder
-\end{frame}
-
 \renewcommand{\partname}{Kryo vs. Std in queue}
 \subsection{\partname}
 \begin{frame}{\partname}
