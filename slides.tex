@@ -28,26 +28,27 @@
 \end{frame}
 
 \section{Introduction}
-% What is the problem, how do we suggest to solve it?
-\renewcommand{\partname}{Requirements}
+\renewcommand{\partname}{Serialization}
 \subsection{\partname}
 \begin{frame}{\partname}
-  We use serialization in 3 cases:
-  \begin{enumerate}
-    \item to store;
-    \item to transmit;
-    \item to loose;
-  \end{enumerate}
-
-  Main features to consider:
-  \begin{enumerate}
-    \item serialize/deserialize speed;
-    \item serialized size;
-    \item stability to change;
-    \item laboriousness;
-    \item platform-dependence;
-  \end{enumerate}
-
+  \centering{
+    We use serialization in 3 cases:
+    \begin{enumerate}
+      \item to store;
+      \item to transmit;
+      \item to loose;
+    \end{enumerate}
+  }
+  \centering{
+    Main features to consider:
+    \begin{enumerate}
+      \item CPU usage;
+      \item serialized size;
+      \item freedom to change format;
+      \item laboriousness;
+      \item platform-dependence;
+    \end{enumerate}
+  }
 \end{frame}
 
 \renewcommand{\partname}{JDK tools}
@@ -55,11 +56,12 @@
 \begin{frame}{\partname}
   \begin{itemize}
     \item Standard serialization: smallest effort / worst performance;
-    \item Externalizable serialization: full control over serialization, define your binary format, no features;
+    \item Externalizable serialization: full control over
+    serialization, define your binary format by hand;
   \end{itemize}
   \begin{table}
     \begin{tabular}{l | c | c | c | c | c }
-      serialization  & speed & size & stability & laboriousness & platform \\
+      serialization  & speed & size & freedom & laboriousness & platform \\
       &       &      & to change &               & dependence\\
       \hline \hline
       standard       & poor & big   & average & low  & only java  \\
@@ -76,20 +78,24 @@
 \renewcommand{\partname}{Why use something else?}
 \subsection{\partname}
 \begin{frame}{\partname}
-
+\centering{
   Motivation:
   \begin{itemize}
     \item conveniently simple and fast approaches;
     \item better adopted for our data: optional params, variable-length numbers, aliases;
     \item independence from language necessary in some cases.
   \end{itemize}
-
+}
+\centering{
   Here we consider:
   \begin{itemize}
-    \item protobuf - https://code.google.com/p/protobuf/;
-    \item avro - http://avro.apache.org/;
-    \item kryo - https://github.com/EsotericSoftware/kryo.
+    \item standard serialization;
+    \item externalizable;
+    \item protobuf - \url{https://code.google.com/p/protobuf/};
+    \item avro - \url{http://avro.apache.org/};
+    \item kryo - \url{https://github.com/EsotericSoftware/kryo}.
   \end{itemize}
+}
 \end{frame}
 
 \renewcommand{\partname}{Protobuf}
@@ -378,19 +384,19 @@ My subjective opinion to choose serialization:
     \end{itemize}
   }
 
-  \item<10-> Use Protobuf if {
+  \item<13-> Use Protobuf if {
     \begin{itemize}
-      \item<11-> you are working at Google;
-      \item<12-> Data is processed in different languages;
-      \item<13-> Need most performant/compact result;
+      \item<14-> you are working at Google;
+      \item<15-> Data is processed in different languages;
+      \item<16-> Need most performant/compact result;
     \end{itemize}
   }
 
-  \item<14-> Use Externalizable if {
+  \item<17-> Use Externalizable if {
     \begin{itemize}
-      \item<15-> you are unique - want implement all the features by yourself;
-      \item<16-> already working in Big Bank;
-      \item<17-> watched only first 3 slides of this presentation;
+      \item<18-> you are unique - want implement all the features by yourself;
+      \item<19-> already working in Big Bank;
+      \item<20-> watched only first 3 slides of this presentation;
     \end{itemize}
   }
 
