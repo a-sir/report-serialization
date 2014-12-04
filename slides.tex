@@ -32,10 +32,11 @@
 \renewcommand{\partname}{Requirements}
 \subsection{\partname}
 \begin{frame}{\partname}
-  We use serialization in 2 cases:
+  We use serialization in 3 cases:
   \begin{enumerate}
     \item to store;
-    \item to transfer;
+    \item to transmit;
+    \item to loose;
   \end{enumerate}
 
   Main features to consider:
@@ -100,7 +101,6 @@
     \item java, python, c++ officially supported;
     \item performant and compact;
   \end{itemize}
-
 
 .proto file:
 \begin{minted}[fontsize=\tiny]{java}
@@ -236,17 +236,166 @@ public class StoredUrl2Serializer extends Serializer<StoredUrl2> {
 \end{frame}
 
 
-\renewcommand{\partname}{Comparison}
+\renewcommand{\partname}{Standard vs Kryo}
 \subsection{\partname}
-\begin{frame}{\partname}
-  Comparison placeholder
+\begin{frame}[fragile]{\partname}
+
+Tested on core i5-2450M + SSD
+
+Without compression:
+
+  \begin{table}
+    \begin{tabular}{l | c | c | c }
+      parameter       & standard & kryo & change \% \\
+      \hline \hline
+      read time, msec & 4999 & 2395   & 52\%   \\
+      (1.5m objects)  &      &        & faster \\
+      \hline
+      write time, msec& 2283 & 975   & 67\%   \\
+      (500k objects)  &      &       & faster \\
+      \hline
+      object size     & 332 & 264   & 20\% \\
+      (bytes)         &     &       & more compact \\
+      \hline
+    \end{tabular}
+
+    \caption{Standard vs Kryo in planners queue}
+  \end{table}
+
+With snappy:
+
+  \begin{table}
+    \begin{tabular}{l | c | c | c }
+      parameter       & standard & kryo & change \% \\
+      \hline \hline
+      read time, msec       & 5306 & 2626   & 51\%   \\
+      (1.5m objects)        &      &        & faster \\
+      \hline
+      write time, msec      & 3406 & 1250   & 63\%   \\
+      (500k objects)        &      &       & faster \\
+      \hline
+      object size           & 110 & 91   & 18\% \\
+      (bytes)               &     &      & more compact \\
+      \hline
+    \end{tabular}
+
+    \caption{Standard vs Kryo in planners queue}
+  \end{table}
+
+
+ \begin{minted}[fontsize=\tiny]{java}
+
+\end{minted}
+\end{frame}
+
+\renewcommand{\partname}{Standard vs. Kryo}
+\subsection{\partname}
+\begin{frame}[fragile]{\partname}
+  \begin{itemize}
+    \item<1-> \large{Useless improvement.}
+    \item<2-> \large{Cause we don't care about speed :)}
+    \item<3-> \large{Let's compress more:}
+\newline
+GZip compress well, but too slow.
+Deflate with $BEST\_SPEED$ option perform between GZip and Snappy.
+
+  \begin{minted}[fontsize=\small]{java}
+
+    public KryoStoredUrlWriter create(@NotNull File file)
+        throws IOException {
+
+      Deflater def = new Deflater(Deflater.BEST_SPEED);
+
+      return new KryoStoredUrlWriter(
+        new DeflaterOutputStream(
+          new BufferedOutputStream(new FileOutputStream(file), 4 * 1024),
+          def
+        )
+      );
+    }
+  \end{minted}
+  \end{itemize}
+
 \end{frame}
 
 \section{Results}
-\renewcommand{\partname}{Kryo vs. Std in queue}
+\renewcommand{\partname}{Standard vs. Kryo in queue}
 \subsection{\partname}
-\begin{frame}{\partname}
-  results placeholder
+\begin{frame}[fragile]{\partname}
+
+  \begin{table}
+    \begin{tabular}{l | c | c | c }
+      parameter       & standard + snappy & kryo + deflate & change \% \\
+      \hline \hline
+      read time, msec & 5292              & 4150           & 22\%   \\
+      (1.5m objects)  &                   &                & faster \\
+      \hline
+      write time, msec& 2529              & 2461           & same   \\
+      (500k objects)  &                   &                &        \\
+      \hline
+      object size     & 110               & 73             & 33\% \\
+      (bytes)         &                   &                & more compact \\
+      \hline
+      reconstruction time  & 240          & 210            & 12.5\% \\
+      planner2v (min)      &              &                & faster \\
+      \hline
+    \end{tabular}
+    \caption{Standard + snappy vs Kryo + deflate}
+  \end{table}
+
+  Space economy on planner2v (5 storages + 3 queue backups): 250Gb
+
+\end{frame}
+
+\renewcommand{\partname}{Choice}
+\subsection{\partname}
+\begin{frame}[fragile]{\partname}
+
+My subjective opinion to choose serialization:
+\begin{itemize}
+  \item<1-> Use standard serialization if {
+    \begin{itemize}
+      \item<1-> Someone will kill you if you write code slowly
+      \item<2-> You are making task on job interview in Big Bank
+      \item<3-> Serialization don't affect performance of system
+      \item<4-> You add/remove fields sometimes, but lazy to update serializer.
+    \end{itemize}
+  }
+  \item<5-> Use Kryo if {
+    \begin{itemize}
+      \item<6-> Someone will kill you if you write code slowly;
+      \item<7-> Data is processed by java only;
+      \item<8-> Twice speed of standard serialization is enough;
+      \item<9-> Subzero is your favorite fighter in Mortal Combat.
+    \end{itemize}
+  }
+
+
+  \item<10-> Use Avro if {
+    \begin{itemize}
+      \item<11-> Data is processed in different languages;
+      \item<12-> You want to be unique:)
+    \end{itemize}
+  }
+
+  \item<10-> Use Protobuf if {
+    \begin{itemize}
+      \item<11-> you are working at Google;
+      \item<12-> Data is processed in different languages;
+      \item<13-> Need most performant/compact result;
+    \end{itemize}
+  }
+
+  \item<14-> Use Externalizable if {
+    \begin{itemize}
+      \item<15-> you are unique - want implement all the features by yourself;
+      \item<16-> already working in Big Bank;
+      \item<17-> watched only first 3 slides of this presentation;
+    \end{itemize}
+  }
+
+
+\end{itemize}
 \end{frame}
 
 \end{document}
